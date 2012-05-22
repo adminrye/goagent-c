@@ -8,7 +8,7 @@ link_directories($ENV{HOME}/lib)
 
 find_package(Threads REQUIRED)
 
-aux_source_directory(goagent-c GOAGENT-C_SRCLIST)
+aux_source_directory(src GOAGENT-C_SRCLIST)
 add_executable(goagent-c ${GOAGENT-C_SRCLIST})
 target_link_libraries(goagent-c ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(goagent-c event)
