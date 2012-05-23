@@ -9,12 +9,14 @@ handle_t * handle_create(int fd) {
     }
     handle->fd = fd;
     HASH_ADD_INT(g_handles, fd, handle);
+    return handle;
 }
 
 int handle_destroy(handle_t *handle) {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
     free(handle);
+    return 0;
 }
 
 handle_t *handle_get(int fd) {

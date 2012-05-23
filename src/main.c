@@ -40,6 +40,10 @@ void run() {
 
     handle = handle_first();
     while (handle) {
+        if (!FD_ISSET(handle->fd, &efds)) {
+            handle = handle_next(handle);
+            continue;
+        }
         temp = handle_next(handle);
         len = sizeof err;
         rv = getsockopt(handle->fd, SOL_SOCKET, SO_ERROR, &err, &len);
