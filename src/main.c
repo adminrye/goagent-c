@@ -2,22 +2,72 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <netinet/in.h> 
+#include <errno.h>
 #include "handle.h"
+#include "listen_handle.h"
 
 void run() {
-    handle_t *handle;
+    handle_t *handle, *temp;
+    int maxfd, rv, err;
+    fd_set rfds, efds;
+    socklen_t len;
+    
+    maxfd = -1;
+    FD_ZERO(&rfds);
+    FD_ZERO(&efds);
 
     handle = handle_first();
     while (handle) {
+        FD_SET(handle->fd, &rfds);
+        FD_SET(handle->fd, &efds);
+        if (handle->fd > maxfd) {
+            maxfd = handle->fd;
+        }
         handle = handle_next(handle);
+    }
+    if (maxfd == -1) {
+        return;
+    }
+
+    handle = handle_first();
+    while (handle) {
+        temp = handle_next(handle);
+        if (handle->readcb && FD_ISSET(handle->fd, &rfds)) {
+            handle->readcb(handle);
+        }
+        handle = temp;
+    }
+
+    handle = handle_first();
+    while (handle) {
+        temp = handle_next(handle);
+        len = sizeof err;
+        rv = getsockopt(handle->fd, SOL_SOCKET, SO_ERROR, &err, &len);
+        if (rv == -1) {
+            perror("getsockopt() failed");
+        } else {
+            fprintf(stderr, "error event:%s", strerror(err));
+            handle_destroy(handle);
+        }
+        handle = temp;
+    }
+
+retry:
+    rv = select(maxfd + 1, &rfds, NULL, &efds, NULL);
+    if (rv == -1) {
+        if (errno == EINTR) {
+            goto retry;
+        }
+        perror("select() failed");
+        return;
     }
 }
 
 int main() { 
     int listenfd, rv;
     struct sockaddr_in listenaddr;
+    handle_t *handle;
 
-    
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
     if (listenfd == -1) {
         perror("socket() failed");
@@ -38,7 +88,8 @@ int main() {
         return 1;
     }
 
-    handle_create(listenfd);
+    handle = handle_create(listenfd);
+    handle->readcb = on_accept;
 
     run();
     return 0;

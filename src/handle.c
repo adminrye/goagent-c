@@ -13,6 +13,15 @@ handle_t * handle_create(int fd) {
 
 int handle_destroy(handle_t *handle) {
     HASH_DEL(g_handles, handle);
+    close(handle->fd);
+    free(handle);
+}
+
+handle_t *handle_get(int fd) {
+   handle_t *h;
+
+   HASH_FIND_INT(g_handles, &fd, h);  
+   return h;
 }
 
 handle_t * handle_first() {
