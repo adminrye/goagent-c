@@ -1,31 +1,47 @@
+/*
+ * buffer.h
+ *
+ * Copyright xubin, 2012
+ *
+ * Author : xubin <nybux.tsui@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2.1 of the GNU Lesser General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it would be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
 #define NODE_SIZE 4 * 1024 - sizeof(void *) - sizeof(size_t) * 2
 
-typedef struct buffer_node {
+struct buffer_node {
     struct buffer_node *next;
     size_t begin;
     size_t end;
     char buffer[NODE_SIZE];
-} buffer_node_t;
+};
 
-typedef struct {
-    buffer_node_t *first;
-    buffer_node_t *last;
+struct buffer {
+    struct buffer_node *first;
+    struct buffer_node *last;
     size_t len;
-} buffer_t;
+};
 
-typedef struct {
-    buffer_t *buffer;
-    buffer_node_t *node;
+struct buffer_ptr {
+    struct buffer *buffer;
+    struct buffer_node *node;
     size_t pos;
-} buffer_ptr_t;
+};
 
-buffer_t * buffer_create();
-void buffer_destroy(buffer_t *buffer);
-int buffer_recv(buffer_t *buffer, int fd);
-int buffer_read_until(buffer_t *buffer,
+struct buffer * buffer_create();
+void buffer_destroy(struct buffer *buffer);
+int buffer_recv(struct buffer *buffer, int fd);
+int buffer_read_until(struct buffer *buffer,
                       const char *_delim,
                       char *outbuf,
                       size_t *outlen); 

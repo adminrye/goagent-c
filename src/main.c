@@ -1,3 +1,19 @@
+/*
+ * main.c
+ *
+ * Copyright xubin
+ *
+ * Author : xubin <nybux.tsui@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2.1 of the GNU Lesser General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it would be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
 #include <stdio.h> 
 #include <string.h> 
 #include <sys/socket.h> 
@@ -10,7 +26,7 @@
 
 static void
 run() {
-    handle_t *handle, *temp;
+    struct handle *handle, *temp;
     int maxfd, rv, err;
     fd_set rfds, efds;
     socklen_t len;
@@ -88,7 +104,7 @@ set_reuseaddr(int fd) {
 int main() { 
     int fd, rv;
     struct sockaddr_in listenaddr;
-    handle_t *handle;
+    struct handle *handle;
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {

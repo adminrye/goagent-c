@@ -1,11 +1,27 @@
+/*
+ * buffer.c
+ *
+ * Copyright xubin, 2012
+ *
+ * Author : xubin <nybux.tsui@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2.1 of the GNU Lesser General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it would be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
 #include <stdlib.h>
 #include <errno.h>
 #include "buffer.h"
 #include "logger.h"
 
-buffer_t *
-buffer_create() {
-    buffer_t *buffer;
+struct buffer * buffer_create()
+{
+    struct buffer *buffer;
 
     buffer = calloc(1, sizeof *buffer);
     if (buffer == NULL) {
@@ -16,9 +32,9 @@ buffer_create() {
     return buffer;
 }
 
-void
-buffer_destroy(buffer_t *buffer) {
-    buffer_node_t *node, *next;
+void buffer_destroy(struct buffer *buffer)
+{
+    struct buffer_node *node, *next;
 
     if (buffer == NULL) {
         return;
@@ -32,9 +48,9 @@ buffer_destroy(buffer_t *buffer) {
     free(buffer);
 }
 
-static buffer_node_t *
-buffer_node_create() {
-    buffer_node_t *node;
+static struct buffer_node * buffer_node_create()
+{
+    struct buffer_node *node;
 
     node = malloc(sizeof *node);
     if (node == NULL) {
@@ -47,8 +63,8 @@ buffer_node_create() {
     return node;
 }
 
-int
-buffer_recv(buffer_t *buffer, int fd) {
+int buffer_recv(struct buffer *buffer, int fd)
+{
     int rv;
 
     if (buffer->first == NULL) {
@@ -72,28 +88,29 @@ retry:
     return rv;
 }
 
-static inline int
-buffer_ptr_begin(buffer_t *buffer, buffer_ptr_t *ptr) {
+static inline int buffer_ptr_begin(struct buffer *buffer,
+                                   struct buffer_ptr *ptr)
+{
     ptr->buffer = buffer;
     ptr->node = buffer->first;
     ptr->pos = buffer->first->begin;
 }
 
-static inline char
-buffer_ptr_char(buffer_ptr_t *ptr) {
+static inline char buffer_ptr_char(struct buffer_ptr *ptr)
+{
     return ptr->node->buffer[ptr->pos];
 }
 
-static inline int
-buffer_ptr_eof(buffer_ptr_t *ptr) {
+static inline int buffer_ptr_eof(struct buffer_ptr *ptr)
+{
     if (ptr->pos == ptr->node->end) {
         return 1;
     }
     return 0;
 }
 
-static inline int
-buffer_ptr_next(buffer_ptr_t *ptr) {
+static inline int buffer_ptr_next(struct buffer_ptr *ptr)
+{
     ++ptr->pos;
     if (ptr->pos == ptr->node->end) {
         ptr->node = ptr->node->next;
@@ -101,15 +118,15 @@ buffer_ptr_next(buffer_ptr_t *ptr) {
     }
 }
 
-int
-buffer_read_until(buffer_t *buffer,
-                  const char *_delim,
-                  char *outbuf,
-                  size_t *outlen) {
-    buffer_node_t *node, *next;
+int buffer_read_until(struct buffer *buffer,
+                      const char *_delim,
+                      char *outbuf,
+                      size_t *outlen)
+{
+    struct buffer_node *node, *next;
     size_t pos;
     const char *delim;
-    buffer_ptr_t ptr;
+    struct buffer_ptr ptr;
 
     if (buffer == NULL) {
         *outlen = 0;
@@ -152,3 +169,4 @@ buffer_read_until(buffer_t *buffer,
     *outlen = 0;
     return -1;
 }
+

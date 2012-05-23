@@ -1,3 +1,19 @@
+/*
+ * handle.h
+ *
+ * Copyright xubin
+ *
+ * Author : xubin <nybux.tsui@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2.1 of the GNU Lesser General Public License
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it would be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
 #ifndef _HANDLE_H_
 #define _HANDLE_H_
 
@@ -7,20 +23,20 @@
 struct handle;
 typedef void (*handle_cb)(struct handle *);
 
-typedef struct handle {
+struct handle {
     int fd;
     handle_cb readcb;
-    buffer_t *recvbuf;
-    buffer_t *sendbuf;
+    struct buffer *recvbuf;
+    struct buffer *sendbuf;
     UT_hash_handle hh;
-} handle_t;
+};
 
-handle_t * handle_create(int fd);
-int handle_destroy(handle_t *handle);
-handle_t * handle_get(int fd);
+struct handle * handle_create(int fd);
+int handle_destroy(struct handle *handle);
+struct handle * handle_get(int fd);
 
-handle_t * handle_first();
-handle_t * handle_next(handle_t *handle);
+struct handle * handle_first();
+struct handle * handle_next(struct handle *handle);
 
 
 #endif
