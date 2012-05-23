@@ -3,6 +3,7 @@
 #include <errno.h>
 #include "handle.h"
 #include "http_handle.h"
+#include "logger.h"
 
 void on_accept(struct tag_handle_t *handle) {
     int fd;
@@ -14,11 +15,12 @@ retry:
         if (errno == EINTR) {
             goto retry;
         }
-        perror("accept() failed");
+        LOG(WARN, "accept() failed:%s", strerror(errno));
         handle_destroy(handle);
         return;
     }
 
+    LOG(INFO, "client connected");
     client = handle_create(fd);
     client->readcb = on_http_read;
 }

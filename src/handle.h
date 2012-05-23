@@ -2,6 +2,7 @@
 #define _HANDLE_H_
 
 #include "uthash.h"
+#include "buffer.h"
 
 struct tag_handle_t;
 typedef void (*handle_cb)(struct tag_handle_t *);
@@ -9,6 +10,7 @@ typedef void (*handle_cb)(struct tag_handle_t *);
 typedef struct tag_handle_t {
     int fd;
     handle_cb readcb;
+    buffer_t *readbuf;
     UT_hash_handle hh;
 } handle_t;
 

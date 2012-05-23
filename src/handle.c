@@ -1,11 +1,15 @@
 #include "handle.h"
+#include "logger.h"
 
 static handle_t *g_handles = NULL;
 
 handle_t * handle_create(int fd) {
-    handle_t *handle = (handle_t *)calloc(1, sizeof *handle);
+    handle_t *handle;
+    
+    handle = (handle_t *)calloc(1, sizeof *handle);
     if (handle == NULL) {
-        fprintf(stderr, "memory alloc failed");
+        LOG(ERR, "memory alloc failed");
+        abort();
         return NULL;
     }
     handle->fd = fd;
@@ -16,6 +20,7 @@ handle_t * handle_create(int fd) {
 int handle_destroy(handle_t *handle) {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
+    buffer_destroy(handle->readbuf);
     free(handle);
     return 0;
 }
