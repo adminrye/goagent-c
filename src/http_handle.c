@@ -5,7 +5,6 @@
 #include "logger.h"
 #include "buffer.h"
 
-<<<<<<< HEAD
 static void
 on_http_get(handle_t *handle) {
 }
@@ -18,7 +17,8 @@ static void
 on_http_connect(handle_t *handle) {
 }
 
-void on_http_read(handle_t *handle) {
+void
+on_http_read(handle_t *handle) {
     char command[16];
     size_t len;
     int rv;
