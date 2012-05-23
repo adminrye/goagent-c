@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "buffer.h"
 
+<<<<<<< HEAD
 static void
 on_http_get(handle_t *handle) {
 }
