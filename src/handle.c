@@ -5,6 +5,7 @@ static handle_t *g_handles = NULL;
 handle_t * handle_create(int fd) {
     handle_t *handle = (handle_t *)calloc(1, sizeof *handle);
     if (handle == NULL) {
+        fprintf(stderr, "memory alloc failed");
         return NULL;
     }
     handle->fd = fd;
