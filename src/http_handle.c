@@ -6,7 +6,6 @@
 #include "buffer.h"
 
 void on_http_read(struct tag_handle_t *handle) {
-    char buf[4096];
     ssize_t rv;
     
     if (handle->readbuf == NULL) {
