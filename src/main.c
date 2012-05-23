@@ -29,6 +29,16 @@ void run() {
         return;
     }
 
+retry:
+    rv = select(maxfd + 1, &rfds, NULL, &efds, NULL);
+    if (rv == -1) {
+        if (errno == EINTR) {
+            goto retry;
+        }
+        perror("select() failed");
+        return;
+    }
+    
     handle = handle_first();
     while (handle) {
         temp = handle_next(handle);
@@ -54,16 +64,6 @@ void run() {
             handle_destroy(handle);
         }
         handle = temp;
-    }
-
-retry:
-    rv = select(maxfd + 1, &rfds, NULL, &efds, NULL);
-    if (rv == -1) {
-        if (errno == EINTR) {
-            goto retry;
-        }
-        perror("select() failed");
-        return;
     }
 }
 
