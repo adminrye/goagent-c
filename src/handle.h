@@ -4,13 +4,14 @@
 #include "uthash.h"
 #include "buffer.h"
 
-struct tag_handle_t;
-typedef void (*handle_cb)(struct tag_handle_t *);
+struct handle;
+typedef void (*handle_cb)(struct handle *);
 
-typedef struct tag_handle_t {
+typedef struct handle {
     int fd;
     handle_cb readcb;
-    buffer_t *readbuf;
+    buffer_t *recvbuf;
+    buffer_t *sendbuf;
     UT_hash_handle hh;
 } handle_t;
 

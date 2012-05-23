@@ -5,7 +5,7 @@
 #include "http_handle.h"
 #include "logger.h"
 
-void on_accept(struct tag_handle_t *handle) {
+void on_accept(handle_t *handle) {
     int fd;
     handle_t *client;
 

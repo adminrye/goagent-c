@@ -71,3 +71,84 @@ retry:
     }
     return rv;
 }
+
+static inline int
+buffer_ptr_begin(buffer_t *buffer, buffer_ptr_t *ptr) {
+    ptr->buffer = buffer;
+    ptr->node = buffer->first;
+    ptr->pos = buffer->first->begin;
+}
+
+static inline char
+buffer_ptr_char(buffer_ptr_t *ptr) {
+    return ptr->node->buffer[ptr->pos];
+}
+
+static inline int
+buffer_ptr_eof(buffer_ptr_t *ptr) {
+    if (ptr->pos == ptr->node->end) {
+        return 1;
+    }
+    return 0;
+}
+
+static inline int
+buffer_ptr_next(buffer_ptr_t *ptr) {
+    ++ptr->pos;
+    if (ptr->pos == ptr->node->end) {
+        ptr->node = ptr->node->next;
+        ptr->pos = ptr->node->begin;
+    }
+}
+
+int
+buffer_read_until(buffer_t *buffer,
+                  const char *_delim,
+                  char *outbuf,
+                  size_t *outlen) {
+    buffer_node_t *node, *next;
+    size_t pos;
+    const char *delim;
+    buffer_ptr_t ptr;
+
+    if (buffer == NULL) {
+        *outlen = 0;
+        return -1;
+    }
+    pos = 0;
+    buffer_ptr_begin(buffer, &ptr);
+    delim = _delim;
+    while (!buffer_ptr_eof(&ptr)) {
+        char ch = buffer_ptr_char(&ptr);
+        outbuf[pos++] = ch;
+        if (ch == *delim) {
+            for (;;) {
+                ++delim;
+                if (*delim == 0) {
+                    *outlen = pos;
+                    return 0;
+                }
+                if (pos == *outlen) {
+                    return -1;
+                }
+                buffer_ptr_next(&ptr);
+                if (buffer_ptr_eof(&ptr)) {
+                    *outlen = 0;
+                    return -1;
+                }
+                ch = buffer_ptr_char(&ptr);
+                outbuf[pos++] = ch;
+                if (*delim != ch) {
+                    if (pos == *outlen) {
+                        return -1;
+                    }
+                    delim = _delim;
+                    break;
+                }
+            }
+        }
+        buffer_ptr_next(&ptr);
+    }
+    *outlen = 0;
+    return -1;
+}

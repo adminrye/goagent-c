@@ -20,7 +20,8 @@ handle_t * handle_create(int fd) {
 int handle_destroy(handle_t *handle) {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
-    buffer_destroy(handle->readbuf);
+    buffer_destroy(handle->recvbuf);
+    buffer_destroy(handle->sendbuf);
     free(handle);
     return 0;
 }
