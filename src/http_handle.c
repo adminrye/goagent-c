@@ -23,6 +23,15 @@
 
 static void on_http_get(struct handle *handle)
 {
+    char url[4096];
+    int rv;
+    size_t len;
+
+    len = sizeof url;
+    rv = buffer_read_until(handle->recvbuf, " ", url, &len);
+    if (rv == -1 || len == sizeof url) {
+        
+    }
 }
 
 static void on_http_post(struct handle *handle)
@@ -64,9 +73,12 @@ void on_http_read(struct handle *handle)
     command[len] = 0;
     if (strcmp(command, "GET ") == 0) {
         LOG(INFO, "GET");
+        on_http_get(handle);
     } else if (strcmp(command, "POST ") == 0) {
         LOG(INFO, "POST");
+        on_http_post(handle);
     } else if (strcmp(command, "CONNECT ") == 0) {
         LOG(INFO, "CONNECT");
+        on_http_connect(handle);
     }
 }

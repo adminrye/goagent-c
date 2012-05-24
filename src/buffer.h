@@ -45,6 +45,7 @@ int buffer_read_until(struct buffer *buffer,
                       const char *_delim,
                       char *outbuf,
                       size_t *outlen); 
+int buffer_drain(struct buffer *buffer, size_t len);
 
 #endif
 

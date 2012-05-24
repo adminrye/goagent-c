@@ -170,3 +170,29 @@ int buffer_read_until(struct buffer *buffer,
     return -1;
 }
 
+int buffer_drain(struct buffer *buffer, size_t _len) {
+    struct buffer_node *node, *next;
+    size_t node_size;
+    size_t len;
+
+    len = _len;
+    node = buffer->first;
+    while (node) {
+        next = node->next;
+        node_size = node->end - node->begin;
+        if (node_size > len) {
+            node->end -= len;
+            return 0;
+        } else if (node_size == len) {
+            buffer->first = next;
+            free(node);
+            return 0;
+        } else {
+            buffer->first = next;
+            free(node);
+            len -= node_size;
+        }
+        node = next;
+    }
+    return -1;
+}
