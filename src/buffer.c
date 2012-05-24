@@ -113,9 +113,13 @@ static inline int buffer_ptr_next(struct buffer_ptr *ptr)
 {
     ++ptr->pos;
     if (ptr->pos == ptr->node->end) {
+        if (ptr->node->next == NULL) {
+            return 0;
+        }
         ptr->node = ptr->node->next;
         ptr->pos = ptr->node->begin;
     }
+    return 0;
 }
 
 int buffer_read_until(struct buffer *buffer,
@@ -128,7 +132,7 @@ int buffer_read_until(struct buffer *buffer,
     const char *delim;
     struct buffer_ptr ptr;
 
-    if (buffer == NULL) {
+    if (buffer == NULL || buffer->first == NULL) {
         *outlen = 0;
         return -1;
     }
@@ -186,6 +190,9 @@ int buffer_drain(struct buffer *buffer, size_t _len) {
             return 0;
         } else if (node_size == len) {
             buffer->first = next;
+            if (buffer->first == NULL) {
+                buffer->last = NULL;
+            }
             free(node);
             return 0;
         } else {

@@ -21,7 +21,7 @@
 #include "logger.h"
 #include "buffer.h"
 
-static void on_http_get(struct handle *handle)
+static void process_request(struct handle *handle)
 {
     char url[4096];
     int rv;
@@ -29,13 +29,33 @@ static void on_http_get(struct handle *handle)
 
     len = sizeof url;
     rv = buffer_read_until(handle->recvbuf, " ", url, &len);
-    if (rv == -1 || len == sizeof url) {
+    if (rv == -1 && len == sizeof url) {
         LOG(WARN, "request url too long");
         handle_destroy(handle);
+        return;
+    } else if (rv == -1 && len == 0) {
         return;
     }
     url[len] = 0;
     LOG(INFO, url);
+}
+
+static void on_http_get(struct handle *handle)
+{
+    int rv;
+
+    rv = buffer_recv(handle->recvbuf, handle->fd);
+    if (rv == -1) {
+        LOG(ERR, "recv() failed:%s", strerror(errno));
+        handle_destroy(handle);
+        return;
+    }
+    if (rv == 0) {
+        LOG(INFO, "client closed");
+        handle_destroy(handle);
+        return;
+    }
+    process_request(handle);
 }
 
 static void on_http_post(struct handle *handle)
@@ -77,12 +97,15 @@ void on_http_read(struct handle *handle)
     command[len] = 0;
     if (strcmp(command, "GET ") == 0) {
         LOG(INFO, "GET");
-        on_http_get(handle);
+        handle->readcb = on_http_get;
+        process_request(handle);
     } else if (strcmp(command, "POST ") == 0) {
         LOG(INFO, "POST");
+        handle->readcb = on_http_post;
         on_http_post(handle);
     } else if (strcmp(command, "CONNECT ") == 0) {
         LOG(INFO, "CONNECT");
+        handle->readcb = on_http_connect;
         on_http_connect(handle);
     }
 }
