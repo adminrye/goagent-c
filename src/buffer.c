@@ -143,6 +143,7 @@ int buffer_read_until(struct buffer *buffer,
                 ++delim;
                 if (*delim == 0) {
                     *outlen = pos;
+                    buffer_drain(buffer, pos);
                     return 0;
                 }
                 if (pos == *outlen) {
@@ -181,7 +182,7 @@ int buffer_drain(struct buffer *buffer, size_t _len) {
         next = node->next;
         node_size = node->end - node->begin;
         if (node_size > len) {
-            node->end -= len;
+            node->begin += len;
             return 0;
         } else if (node_size == len) {
             buffer->first = next;

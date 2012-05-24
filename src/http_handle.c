@@ -30,8 +30,12 @@ static void on_http_get(struct handle *handle)
     len = sizeof url;
     rv = buffer_read_until(handle->recvbuf, " ", url, &len);
     if (rv == -1 || len == sizeof url) {
-        
+        LOG(WARN, "request url too long");
+        handle_destroy(handle);
+        return;
     }
+    url[len] = 0;
+    LOG(INFO, url);
 }
 
 static void on_http_post(struct handle *handle)
