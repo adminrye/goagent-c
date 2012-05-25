@@ -122,20 +122,31 @@ static inline int buffer_ptr_next(struct buffer_ptr *ptr)
     return 0;
 }
 
-int buffer_read_until(struct buffer *buffer,
-                      const char *_delim,
-                      char *outbuf,
-                      size_t *outlen)
+enum buffer_result buffer_read_until(struct buffer *buffer,
+                                     const char *_delim,
+                                     char *outbuf,
+                                     size_t *outlen)
 {
     struct buffer_node *node, *next;
     size_t pos;
     const char *delim;
     struct buffer_ptr ptr;
 
-    if (buffer == NULL || buffer->first == NULL) {
-        *outlen = 0;
-        return -1;
+    if (buffer == NULL
+            || _delim == NULL
+            || outbuf == NULL
+            || outlen == NULL
+            || _delim[0] == 0) {
+        LOG(ERR, "buffer_read_until arugment invalid");
+        return BUFFER_INVAL;
     }
+
+    if (*outlen == 0)
+        return BUFFER_TOOSMALL;
+
+    if (buffer == NULL || buffer->first == NULL) 
+        return BUFFER_NOTFOUND;
+
     pos = 0;
     buffer_ptr_begin(buffer, &ptr);
     delim = _delim;
@@ -148,31 +159,29 @@ int buffer_read_until(struct buffer *buffer,
                 if (*delim == 0) {
                     *outlen = pos;
                     buffer_drain(buffer, pos);
-                    return 0;
+                    return BUFFER_FOUND; 
                 }
-                if (pos == *outlen) {
-                    return -1;
-                }
+                if (pos >= *outlen) 
+                    return BUFFER_TOOSMALL;
+
                 buffer_ptr_next(&ptr);
-                if (buffer_ptr_eof(&ptr)) {
-                    *outlen = 0;
-                    return -1;
-                }
+                if (buffer_ptr_eof(&ptr)) 
+                    return BUFFER_NOTFOUND;
+
                 ch = buffer_ptr_char(&ptr);
                 outbuf[pos++] = ch;
                 if (*delim != ch) {
-                    if (pos == *outlen) {
-                        return -1;
-                    }
                     delim = _delim;
                     break;
                 }
             }
         }
+        if (pos >= *outlen) 
+            return BUFFER_TOOSMALL;
         buffer_ptr_next(&ptr);
     }
     *outlen = 0;
-    return -1;
+    return BUFFER_NOTFOUND;
 }
 
 int buffer_drain(struct buffer *buffer, size_t _len) {

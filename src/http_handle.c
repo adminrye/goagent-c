@@ -22,25 +22,28 @@
 #include "buffer.h"
 #include "http_handle.h"
 
+#define HTTP_GET "GET"
+#define HTTP_POST "POST"
+#define HTTP_CONNECT "CONNECT"
+
 static void process_request(struct handle *handle)
 {
     char url[4096];
-    int rv;
+    enum buffer_result rv;
     size_t len;
     struct http_arg *arg;
 
     arg = (struct http_arg *)handle->arg;
     len = sizeof url;
     rv = buffer_read_until(arg->recvbuf, " ", url, &len);
-    if (rv == -1 && len == sizeof url) {
+    if (rv == BUFFER_FOUND) {
+        url[len] = 0;
+        LOG(INFO, url);
+    } else if (rv == BUFFER_TOOSMALL) {
         LOG(WARN, "request url too long");
         handle_destroy(handle);
-        return;
-    } else if (rv == -1 && len == 0) {
-        return;
     }
-    url[len] = 0;
-    LOG(INFO, url);
+    return;
 }
 
 static void on_http_get(struct handle *handle)
@@ -87,7 +90,7 @@ void on_http_read(struct handle *handle)
 {
     char command[16];
     size_t len;
-    int rv;
+    enum buffer_result rv;
     struct http_arg *arg;
 
     arg = (struct http_arg *)handle->arg;
@@ -108,22 +111,20 @@ void on_http_read(struct handle *handle)
 
     len = sizeof command;
     rv = buffer_read_until(arg->recvbuf, " ", command, &len);
-    if (rv == -1 || len == sizeof command) {
+    if (rv == BUFFER_TOOSMALL) {
         LOG(WARN, "request is not http");
         handle_destroy(handle);
         return;
     }
-    command[len] = 0;
-    if (strcmp(command, "GET ") == 0) {
-        LOG(INFO, "GET");
+
+    LOG(INFO, "%.*s", len, command);
+    if (strncmp(command, HTTP_GET" ", sizeof HTTP_GET" " - 1) == 0) {
         handle->readcb = on_http_get;
         process_request(handle);
-    } else if (strcmp(command, "POST ") == 0) {
-        LOG(INFO, "POST");
+    } else if (strncmp(command, HTTP_POST" ", sizeof HTTP_POST" " - 1) == 0) {
         handle->readcb = on_http_post;
         on_http_post(handle);
-    } else if (strcmp(command, "CONNECT ") == 0) {
-        LOG(INFO, "CONNECT");
+    } else if (strncmp(command, HTTP_CONNECT" ", sizeof HTTP_CONNECT" " - 1) == 0) {
         handle->readcb = on_http_connect;
         on_http_connect(handle);
     }
