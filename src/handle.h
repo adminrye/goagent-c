@@ -22,12 +22,14 @@
 
 struct handle;
 typedef void (*handle_cb)(struct handle *);
+typedef void (*arg_freer)(void *arg);
 
-struct handle {
+struct handle
+{
     int fd;
     handle_cb readcb;
-    struct buffer *recvbuf;
-    struct buffer *sendbuf;
+    arg_freer freer;
+    void *arg;
     UT_hash_handle hh;
 };
 

@@ -17,6 +17,25 @@
 #ifndef _HTTP_HANDLE_H_
 #define _HTTP_HANDLE_H_
 
+enum http_stage
+{
+    HTTP_COMMAND,
+    HTTP_URL,
+    HTTP_REQUEST,
+    HTTP_HEAD_KEY,
+    HTTP_HEAD_VAL,
+    HTTP_DATA
+};
+
+struct http_arg
+{
+    struct buffer *recvbuf;
+    struct buffer *sendbuf;
+    enum http_stage stage;
+};
+
+void http_arg_freer(void *arg);
+
 void on_http_read(struct handle *handle);
 
 #endif

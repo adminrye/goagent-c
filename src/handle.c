@@ -38,8 +38,9 @@ int handle_destroy(struct handle *handle)
 {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
-    buffer_destroy(handle->recvbuf);
-    buffer_destroy(handle->sendbuf);
+    if (handle->freer) {
+        handle->freer(handle->arg);
+    }
     free(handle);
     return 0;
 }

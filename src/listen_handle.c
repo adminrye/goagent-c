@@ -40,4 +40,6 @@ retry:
     LOG(INFO, "client connected");
     client = handle_create(fd);
     client->readcb = on_http_read;
+    client->arg = calloc(1, sizeof(struct http_arg));
+    client->freer = http_arg_freer;
 }

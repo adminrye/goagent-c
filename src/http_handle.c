@@ -20,15 +20,18 @@
 #include "handle.h"
 #include "logger.h"
 #include "buffer.h"
+#include "http_handle.h"
 
 static void process_request(struct handle *handle)
 {
     char url[4096];
     int rv;
     size_t len;
+    struct http_arg *arg;
 
+    arg = (struct http_arg *)handle->arg;
     len = sizeof url;
-    rv = buffer_read_until(handle->recvbuf, " ", url, &len);
+    rv = buffer_read_until(arg->recvbuf, " ", url, &len);
     if (rv == -1 && len == sizeof url) {
         LOG(WARN, "request url too long");
         handle_destroy(handle);
@@ -43,8 +46,10 @@ static void process_request(struct handle *handle)
 static void on_http_get(struct handle *handle)
 {
     int rv;
+    struct http_arg *arg;
 
-    rv = buffer_recv(handle->recvbuf, handle->fd);
+    arg = (struct http_arg *)handle->arg;
+    rv = buffer_recv(arg->recvbuf, handle->fd);
     if (rv == -1) {
         LOG(ERR, "recv() failed:%s", strerror(errno));
         handle_destroy(handle);
@@ -66,16 +71,30 @@ static void on_http_connect(struct handle *handle)
 {
 }
 
+void http_arg_freer(void *_arg) {
+    struct http_arg *arg;
+
+    if (_arg == NULL) {
+        return;
+    }
+    arg = (struct http_arg *)_arg;
+    buffer_destroy(arg->recvbuf);
+    buffer_destroy(arg->sendbuf);
+    free(arg);
+}
+
 void on_http_read(struct handle *handle)
 {
     char command[16];
     size_t len;
     int rv;
-    
-    if (handle->recvbuf == NULL) {
-        handle->recvbuf = buffer_create();
+    struct http_arg *arg;
+
+    arg = (struct http_arg *)handle->arg;
+    if (arg->recvbuf == NULL) {
+        arg->recvbuf = buffer_create();
     }
-    rv = buffer_recv(handle->recvbuf, handle->fd);
+    rv = buffer_recv(arg->recvbuf, handle->fd);
     if (rv == -1) {
         LOG(ERR, "recv() failed:%s", strerror(errno));
         handle_destroy(handle);
@@ -88,7 +107,7 @@ void on_http_read(struct handle *handle)
     }
 
     len = sizeof command;
-    rv = buffer_read_until(handle->recvbuf, " ", command, &len);
+    rv = buffer_read_until(arg->recvbuf, " ", command, &len);
     if (rv == -1 || len == sizeof command) {
         LOG(WARN, "request is not http");
         handle_destroy(handle);
@@ -109,3 +128,4 @@ void on_http_read(struct handle *handle)
         on_http_connect(handle);
     }
 }
+
