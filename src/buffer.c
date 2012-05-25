@@ -103,23 +103,20 @@ static inline char buffer_ptr_char(struct buffer_ptr *ptr)
 
 static inline int buffer_ptr_eof(struct buffer_ptr *ptr)
 {
-    if (ptr->pos == ptr->node->end) {
-        return 1;
-    }
-    return 0;
+    return (ptr->pos == ptr->node->end) ? 1 : 0;
 }
 
-static inline int buffer_ptr_next(struct buffer_ptr *ptr)
+static inline void buffer_ptr_next(struct buffer_ptr *ptr)
 {
     ++ptr->pos;
     if (ptr->pos == ptr->node->end) {
         if (ptr->node->next == NULL) {
-            return 0;
+            return;
         }
         ptr->node = ptr->node->next;
         ptr->pos = ptr->node->begin;
     }
-    return 0;
+    return;
 }
 
 enum buffer_result buffer_read_until(struct buffer *buffer,
@@ -137,7 +134,7 @@ enum buffer_result buffer_read_until(struct buffer *buffer,
             || outbuf == NULL
             || outlen == NULL
             || _delim[0] == 0) {
-        LOG(ERR, "buffer_read_until arugment invalid");
+        LOG(ERR, "buffer_read_until invalid arugment passed");
         return BUFFER_INVAL;
     }
 
