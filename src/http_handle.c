@@ -17,10 +17,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <stdio.h>
+#include <assert.h>
 #include "handle.h"
 #include "logger.h"
 #include "buffer.h"
 #include "http_handle.h"
+#include "zlib_wrap.h"
 
 #define HTTP_GET "GET"
 #define HTTP_POST "POST"
@@ -73,7 +76,8 @@ static void on_http_post(struct handle *handle) {
 static void on_http_connect(struct handle *handle) {
 }
 
-void http_arg_deleter(void *_arg) { struct http_arg *arg;
+void http_arg_deleter(void *_arg) {
+    struct http_arg *arg;
 
     if (_arg == NULL) {
         return;
@@ -81,12 +85,18 @@ void http_arg_deleter(void *_arg) { struct http_arg *arg;
     arg = (struct http_arg *)_arg;
     buffer_destroy(arg->recvbuf);
     buffer_destroy(arg->sendbuf);
+    if (arg->zstrm) {
+        deflateEnd(arg->zstrm);
+        free(arg->zstrm);
+    }
     free(arg);
 }
 
 void on_http_read(struct handle *handle) {
+    char temp[64];
     char command[16];
     size_t len;
+    int strlen;
     enum buffer_result rv;
     struct http_arg *arg;
 
@@ -116,6 +126,13 @@ void on_http_read(struct handle *handle) {
 
     LOG(INFO, "%.*s", len, command);
     if (strncmp(command, HTTP_GET" ", sizeof HTTP_GET" " - 1) == 0) {
+        assert(arg->sendbuf == NULL);
+        assert(arg->zstrm == NULL);
+
+        strlen = snprintf(temp, sizeof temp, "method=%02x%02x%02x", 'G', 'E', 'T');
+        arg->sendbuf = buffer_create();
+        arg->zstrm = zcmp_open();
+        zcmp_compress(arg->zstrm, temp, strlen, arg->sendbuf);
         handle->readcb = on_http_get;
         process_request(handle);
     } else if (strncmp(command, HTTP_POST" ", sizeof HTTP_POST" " - 1) == 0) {

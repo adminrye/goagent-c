@@ -17,6 +17,8 @@
 #ifndef _HTTP_HANDLE_H_
 #define _HTTP_HANDLE_H_
 
+#include "zlib.h"
+
 enum http_stage
 {
     HTTP_COMMAND,
@@ -31,6 +33,7 @@ struct http_arg
 {
     struct buffer *recvbuf;
     struct buffer *sendbuf;
+    z_stream *zstrm;
     enum http_stage stage;
 };
 

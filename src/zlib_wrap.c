@@ -114,6 +114,6 @@ int zexp_expand(z_stream *strm, char *in, uint32_t len, struct buffer *buffer) {
 }
 
 void zexp_close(z_stream *strm) {
-    deflateEnd(strm);
+    inflateEnd(strm);
     free(strm);
 }

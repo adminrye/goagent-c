@@ -16,6 +16,7 @@
 
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 #include "buffer.h"
 #include "logger.h"
 
@@ -77,6 +78,24 @@ retry:
     }
     buffer->len += rv;
     return rv;
+}
+
+void buffer_append_string(struct buffer *buffer, const char *str, size_t _len) {
+    const char *src;
+    size_t len, node_len, cpy_len;
+
+    src = str;
+    len = _len;
+    while (len > 0) {
+        buffer_prepare_space(buffer);
+        node_len = NODE_SIZE - buffer->last->end;
+        cpy_len = node_len > len ? len : node_len;
+        memcpy(buffer->last->buffer + buffer->last->end,
+               str,
+               cpy_len);
+        str += cpy_len;
+        len -= cpy_len;
+    }
 }
 
 static inline int buffer_ptr_begin(struct buffer *buffer,
