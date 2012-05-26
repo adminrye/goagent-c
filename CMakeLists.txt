@@ -10,8 +10,6 @@ include_directories(zlib)
 
 find_package(Threads REQUIRED)
 
-exec_program("${CMAKE_CURRENT_SOURCE_DIR}/get-zlib")
-
 aux_source_directory(src GOAGENT-C_SRCLIST)
 aux_source_directory(zlib GOAGENT-C_SRCLIST)
 add_executable(goagent-c ${GOAGENT-C_SRCLIST})
