@@ -34,7 +34,7 @@ struct http_arg
     enum http_stage stage;
 };
 
-void http_arg_freer(void *arg);
+void http_arg_deleter(void *arg);
 
 void on_http_read(struct handle *handle);
 

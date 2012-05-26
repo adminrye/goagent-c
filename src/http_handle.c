@@ -73,7 +73,7 @@ static void on_http_post(struct handle *handle) {
 static void on_http_connect(struct handle *handle) {
 }
 
-void http_arg_freer(void *_arg) { struct http_arg *arg;
+void http_arg_deleter(void *_arg) { struct http_arg *arg;
 
     if (_arg == NULL) {
         return;

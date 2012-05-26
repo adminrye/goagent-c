@@ -36,8 +36,8 @@ struct handle * handle_create(int fd) {
 int handle_destroy(struct handle *handle) {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
-    if (handle->freer) {
-        handle->freer(handle->arg);
+    if (handle->deleter) {
+        handle->deleter(handle->arg);
     }
     free(handle);
     return 0;
