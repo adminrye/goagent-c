@@ -1,5 +1,5 @@
 /*
- * zlib_wrap.c
+ * zlib_wrap.h
  *
  * Copyright xubin
  *
@@ -14,4 +14,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+struct zcmp_handle {
+    z_stream *strm;
+};
 
+struct zexp_handle {
+    z_stream *strm;
+};
+
+struct zcom_handle * zcom_create();
+int zcom_compress_some();
