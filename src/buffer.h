@@ -46,17 +46,14 @@ enum buffer_result {
 };
 
 struct buffer * buffer_create();
-
 void buffer_destroy(struct buffer *buffer);
-
 int buffer_recv(struct buffer *buffer, int fd);
-
 enum buffer_result buffer_read_until(struct buffer *buffer,
                                      const char *_delim,
                                      char *outbuf,
                                      size_t *outlen); 
-
 int buffer_drain(struct buffer *buffer, size_t len);
+void buffer_prepare_space(struct buffer *buffer);
 
 #endif
 

@@ -23,6 +23,7 @@
 #include "listen_handle.h"
 #include "logger.h"
 #include "buffer.h"
+#include "zlib_wrap.h"
 
 static void
 run() {
@@ -101,18 +102,7 @@ set_reuseaddr(int fd) {
     }
 }
 
-
-int def(FILE *source, FILE *dest, int level); 
-
 int main() { 
-    FILE *fin = fopen("channel.cpp", "rb");
-    FILE *fout = fopen("channel.z", "wb");
-    def(fin, fout, -1);
-    fclose(fin);
-    fclose(fout);
-    return 0;
-
-
     int fd, rv;
     struct sockaddr_in listenaddr;
     struct handle *handle;

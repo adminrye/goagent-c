@@ -63,13 +63,7 @@ static struct buffer_node * buffer_node_create() {
 int buffer_recv(struct buffer *buffer, int fd) {
     int rv;
 
-    if (buffer->first == NULL) {
-        buffer->first = buffer_node_create();
-        buffer->last = buffer->first;
-    } else if (buffer->last->end == NODE_SIZE) {
-        buffer->last->next = buffer_node_create();
-        buffer->last = buffer->last->next;
-    }
+    buffer_prepare_space(buffer);
 retry:
     rv = recv(fd,
               buffer->last->buffer + buffer->last->end,
@@ -81,6 +75,7 @@ retry:
     if (rv > 0) {
         buffer->last->end = buffer->last->end + rv;
     }
+    buffer->len += rv;
     return rv;
 }
 
@@ -185,6 +180,7 @@ int buffer_drain(struct buffer *buffer, size_t _len) {
         node_size = node->end - node->begin;
         if (node_size > len) {
             node->begin += len;
+            buffer->len -= len;
             return 0;
         } else if (node_size == len) {
             buffer->first = next;
@@ -192,6 +188,7 @@ int buffer_drain(struct buffer *buffer, size_t _len) {
                 buffer->last = NULL;
             }
             free(node);
+            buffer->len -= len;
             return 0;
         } else {
             buffer->first = next;
@@ -201,4 +198,14 @@ int buffer_drain(struct buffer *buffer, size_t _len) {
         node = next;
     }
     return -1;
+}
+
+void buffer_prepare_space(struct buffer *buffer) {
+    if (buffer->first == NULL) {
+        buffer->first = buffer_node_create();
+        buffer->last = buffer->first;
+    } else if (buffer->last->end == NODE_SIZE) {
+        buffer->last->next = buffer_node_create();
+        buffer->last = buffer->last->next;
+    }
 }

@@ -14,13 +14,14 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-struct zcmp_handle {
-    z_stream *strm;
-};
+#include "zlib.h"
+#include "buffer.h"
 
-struct zexp_handle {
-    z_stream *strm;
-};
+z_stream * zcmp_open();
+void zcmp_compress(z_stream *strm, char *in, uint32_t len, struct buffer *buffer);
+void zcmp_close(z_stream *strm, char *in, uint32_t len, struct buffer *buffer);
 
-struct zcom_handle * zcom_create();
-int zcom_compress_some();
+z_stream * zexp_open();
+void zexp_expand(z_stream *strm, char *in, uint32_t len, struct buffer *buffer);
+void zexp_close(z_stream *strm);
+
