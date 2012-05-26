@@ -26,8 +26,7 @@
 #define HTTP_POST "POST"
 #define HTTP_CONNECT "CONNECT"
 
-static void process_request(struct handle *handle)
-{
+static void process_request(struct handle *handle) {
     char url[4096];
     enum buffer_result rv;
     size_t len;
@@ -36,18 +35,20 @@ static void process_request(struct handle *handle)
     arg = (struct http_arg *)handle->arg;
     len = sizeof url;
     rv = buffer_read_until(arg->recvbuf, " ", url, &len);
-    if (rv == BUFFER_FOUND) {
-        url[len] = 0;
-        LOG(INFO, url);
-    } else if (rv == BUFFER_TOOSMALL) {
+    if (rv == BUFFER_TOOSMALL) {
         LOG(WARN, "request url too long");
         handle_destroy(handle);
+        return;
     }
+    if (rv == BUFFER_NOTFOUND) {
+        return;
+    }
+    url[len] = 0;
+    LOG(INFO, url);
     return;
 }
 
-static void on_http_get(struct handle *handle)
-{
+static void on_http_get(struct handle *handle) {
     int rv;
     struct http_arg *arg;
 
@@ -66,16 +67,13 @@ static void on_http_get(struct handle *handle)
     process_request(handle);
 }
 
-static void on_http_post(struct handle *handle)
-{
+static void on_http_post(struct handle *handle) {
 }
 
-static void on_http_connect(struct handle *handle)
-{
+static void on_http_connect(struct handle *handle) {
 }
 
-void http_arg_freer(void *_arg) {
-    struct http_arg *arg;
+void http_arg_freer(void *_arg) { struct http_arg *arg;
 
     if (_arg == NULL) {
         return;
@@ -86,8 +84,7 @@ void http_arg_freer(void *_arg) {
     free(arg);
 }
 
-void on_http_read(struct handle *handle)
-{
+void on_http_read(struct handle *handle) {
     char command[16];
     size_t len;
     enum buffer_result rv;

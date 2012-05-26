@@ -21,8 +21,7 @@
 #include "http_handle.h"
 #include "logger.h"
 
-void on_accept(struct handle *handle)
-{
+void on_accept(struct handle *handle) {
     int fd;
     struct handle *client;
 

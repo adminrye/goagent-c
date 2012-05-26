@@ -19,8 +19,7 @@
 
 static struct handle *g_handles = NULL;
 
-struct handle * handle_create(int fd)
-{
+struct handle * handle_create(int fd) {
     struct handle *handle;
     
     handle = (struct handle *)calloc(1, sizeof *handle);
@@ -34,8 +33,7 @@ struct handle * handle_create(int fd)
     return handle;
 }
 
-int handle_destroy(struct handle *handle)
-{
+int handle_destroy(struct handle *handle) {
     HASH_DEL(g_handles, handle);
     close(handle->fd);
     if (handle->freer) {
@@ -45,20 +43,17 @@ int handle_destroy(struct handle *handle)
     return 0;
 }
 
-struct handle *handle_get(int fd)
-{
+struct handle *handle_get(int fd) {
     struct handle *h;
 
     HASH_FIND_INT(g_handles, &fd, h);  
     return h;
 }
 
-struct handle * handle_first()
-{
+struct handle * handle_first() {
     return g_handles;
 }
 
-struct handle * handle_next(struct handle *handle)
-{
+struct handle * handle_next(struct handle *handle) {
     return handle->hh.next;
 }

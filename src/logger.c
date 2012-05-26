@@ -21,8 +21,7 @@
 void log_func(enum logger_level level,
               const char *filename,
               const int line,
-              const char *fmt, ...)
-{
+              const char *fmt, ...) {
     switch (level) {
         case ERR:
             fprintf(stderr, "[ERR] ");

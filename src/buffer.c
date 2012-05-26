@@ -19,8 +19,7 @@
 #include "buffer.h"
 #include "logger.h"
 
-struct buffer * buffer_create()
-{
+struct buffer * buffer_create() {
     struct buffer *buffer;
 
     buffer = calloc(1, sizeof *buffer);
@@ -32,8 +31,7 @@ struct buffer * buffer_create()
     return buffer;
 }
 
-void buffer_destroy(struct buffer *buffer)
-{
+void buffer_destroy(struct buffer *buffer) {
     struct buffer_node *node, *next;
 
     if (buffer == NULL) {
@@ -48,8 +46,7 @@ void buffer_destroy(struct buffer *buffer)
     free(buffer);
 }
 
-static struct buffer_node * buffer_node_create()
-{
+static struct buffer_node * buffer_node_create() {
     struct buffer_node *node;
 
     node = malloc(sizeof *node);
@@ -63,8 +60,7 @@ static struct buffer_node * buffer_node_create()
     return node;
 }
 
-int buffer_recv(struct buffer *buffer, int fd)
-{
+int buffer_recv(struct buffer *buffer, int fd) {
     int rv;
 
     if (buffer->first == NULL) {
@@ -89,25 +85,21 @@ retry:
 }
 
 static inline int buffer_ptr_begin(struct buffer *buffer,
-                                   struct buffer_ptr *ptr)
-{
+                                   struct buffer_ptr *ptr) {
     ptr->buffer = buffer;
     ptr->node = buffer->first;
     ptr->pos = buffer->first->begin;
 }
 
-static inline char buffer_ptr_char(struct buffer_ptr *ptr)
-{
+static inline char buffer_ptr_char(struct buffer_ptr *ptr) {
     return ptr->node->buffer[ptr->pos];
 }
 
-static inline int buffer_ptr_eof(struct buffer_ptr *ptr)
-{
+static inline int buffer_ptr_eof(struct buffer_ptr *ptr) {
     return (ptr->pos == ptr->node->end) ? 1 : 0;
 }
 
-static inline void buffer_ptr_next(struct buffer_ptr *ptr)
-{
+static inline void buffer_ptr_next(struct buffer_ptr *ptr) {
     ++ptr->pos;
     if (ptr->pos == ptr->node->end) {
         if (ptr->node->next == NULL) {
@@ -122,8 +114,7 @@ static inline void buffer_ptr_next(struct buffer_ptr *ptr)
 enum buffer_result buffer_read_until(struct buffer *buffer,
                                      const char *_delim,
                                      char *outbuf,
-                                     size_t *outlen)
-{
+                                     size_t *outlen) {
     struct buffer_node *node, *next;
     size_t pos;
     const char *delim;
@@ -135,6 +126,7 @@ enum buffer_result buffer_read_until(struct buffer *buffer,
             || outlen == NULL
             || _delim[0] == 0) {
         LOG(ERR, "buffer_read_until invalid arugment passed");
+        abort();
         return BUFFER_INVAL;
     }
 
