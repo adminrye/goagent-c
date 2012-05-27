@@ -59,6 +59,29 @@ static void add_req_hexstring(struct buffer *buffer,
 }
 
 static void send_request(struct handle *handle) {
+    struct http_arg *arg;
+    struct buffer_node *node, *next;
+    struct buffer *zbuffer;
+    size_t node_len;
+    z_stream *z;
+
+    arg = (struct http_arg *)handle->arg;
+    node = arg->recvbuf->first;
+    z = zcmp_open();
+    zbuffer = buffer_create();
+    for (;;) {
+        next = node->next;
+        node_len = node->end - node->begin;
+        if (next) {
+            zcmp_compress(z, node->buffer + node->begin, node_len, zbuffer);
+        } else {
+            zcmp_close(z, node->buffer + node->begin, node_len, zbuffer);
+            break;
+        }
+        node = next;
+    }
+    buffer_destroy(arg->sendbuf);
+    arg->sendbuf = zbuffer;
 }
 
 static void on_read_payload2(struct handle *handle) {
