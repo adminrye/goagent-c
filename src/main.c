@@ -19,13 +19,16 @@
 #include <sys/socket.h> 
 #include <netinet/in.h> 
 #include <errno.h>
+#include <unistd.h>
 #include "handle.h"
 #include "listen_handle.h"
 #include "logger.h"
 #include "buffer.h"
 
-static void
-run() {
+char *g_passwd = NULL;
+static uint16_t s_port = 9087;
+
+static void run() {
     struct handle *handle, *temp;
     int maxfd, rv, err;
     fd_set rfds, efds;
@@ -89,8 +92,7 @@ retry:
     }
 }
 
-static void
-set_reuseaddr(int fd) {
+static void set_reuseaddr(int fd) {
     int flag, len, rv;
 
     flag = 1;
@@ -101,10 +103,43 @@ set_reuseaddr(int fd) {
     }
 }
 
-int main() { 
+static void print_usage() {
+    printf("goagent-c [options]\n"
+           "  -h            show this help\n"
+           "  -p PORT       listen port,default 8087\n"
+           "  -P PASSWORD   server password\n");
+}
+
+static int process_arg(int argc, char **argv) {
+    int ch; 
+
+    while ((ch = getopt(argc, argv, "hp:P:")) != -1) {
+        switch(ch) {
+            case 'h':
+                print_usage();
+                return -1;
+            case 'p':
+                s_port = strtol(optarg, NULL, 10);
+                break;
+            case 'P':
+                g_passwd = optarg;
+                break;
+            default:
+                break;
+        }   
+    }   
+    return 0;
+}
+
+int main(int argc, char **argv) { 
     int fd, rv;
     struct sockaddr_in listenaddr;
     struct handle *handle;
+
+    rv = process_arg(argc, argv);
+    if (rv == -1) {
+        return 0;
+    }
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -114,7 +149,7 @@ int main() {
     set_reuseaddr(fd);
     memset(&listenaddr, 0, sizeof listenaddr);
     listenaddr.sin_family = AF_INET;
-    listenaddr.sin_port = htons(9087);
+    listenaddr.sin_port = htons(s_port);
     listenaddr.sin_addr.s_addr = INADDR_ANY;
     rv = bind(fd, (struct sockaddr *)&listenaddr, sizeof listenaddr);
     if (rv == -1) {

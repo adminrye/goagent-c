@@ -93,27 +93,28 @@ void buffer_append(struct buffer *buffer, const char *str, size_t _len) {
         memcpy(buffer->last->buffer + buffer->last->end,
                str,
                cpy_len);
+        buffer->last->end += cpy_len;
         str += cpy_len;
         len -= cpy_len;
     }
 }
 
-static inline int buffer_ptr_begin(struct buffer *buffer,
-                                   struct buffer_ptr *ptr) {
+inline void buffer_ptr_begin(struct buffer *buffer,
+                             struct buffer_ptr *ptr) {
     ptr->buffer = buffer;
     ptr->node = buffer->first;
     ptr->pos = buffer->first->begin;
 }
 
-static inline char buffer_ptr_char(struct buffer_ptr *ptr) {
+inline char buffer_ptr_char(struct buffer_ptr *ptr) {
     return ptr->node->buffer[ptr->pos];
 }
 
-static inline int buffer_ptr_eof(struct buffer_ptr *ptr) {
+inline int buffer_ptr_eof(struct buffer_ptr *ptr) {
     return (ptr->pos == ptr->node->end) ? 1 : 0;
 }
 
-static inline void buffer_ptr_next(struct buffer_ptr *ptr) {
+inline void buffer_ptr_next(struct buffer_ptr *ptr) {
     ++ptr->pos;
     if (ptr->pos == ptr->node->end) {
         if (ptr->node->next == NULL) {

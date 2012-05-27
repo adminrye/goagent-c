@@ -56,5 +56,11 @@ int buffer_drain(struct buffer *buffer, size_t len);
 void buffer_prepare_space(struct buffer *buffer);
 void buffer_append(struct buffer *buffer, const char *str, size_t len);
 
+void buffer_ptr_begin(struct buffer *buffer, struct buffer_ptr *ptr); 
+char buffer_ptr_char(struct buffer_ptr *ptr); 
+int buffer_ptr_eof(struct buffer_ptr *ptr); 
+void buffer_ptr_next(struct buffer_ptr *ptr); 
+
+
 #endif
 

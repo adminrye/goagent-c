@@ -45,7 +45,7 @@ static void add_req_string(struct buffer *buffer, const char *str, size_t len) {
     buffer_append(buffer, str, len);
 }
 
-#define ADD_REQ_HEXSTRING(buf, str) add_req_string(buf, str, sizeof str - 1)
+#define ADD_REQ_HEXSTRING(buf, str) add_req_hexstring(buf, str, sizeof str - 1)
 static void add_req_hexstring(struct buffer *buffer,
                               const char *str,
                               size_t len) {
@@ -99,9 +99,9 @@ static void on_read_payload(struct handle *handle) {
     struct http_arg *arg;
     struct buffer_node *node, *next;
 
-    ADD_REQ_STRING(arg->sendbuf, "&headers=");
 
     arg = (struct http_arg *)handle->arg;
+    ADD_REQ_STRING(arg->sendbuf, "&payload=");
     if (arg->content_length == 0) {
         return;
     }
@@ -151,10 +151,6 @@ static void on_read_headval(struct handle *handle) {
         handle_destroy(handle);
         return;
     }
-    if (len == 2) {
-        on_read_payload(handle);
-        return;
-    }
 
     if (val[0] == ' ') {
         add_req_hexstring(arg->sendbuf, val + 1, len - 3);
@@ -172,6 +168,20 @@ static void on_read_headval(struct handle *handle) {
     return;
 }
 
+static int is_empty_line(struct buffer *buffer) {
+    struct buffer_ptr ptr;
+
+    buffer_ptr_begin(buffer, &ptr);
+    if (buffer_ptr_char(&ptr) != '\r') {
+        return 0;
+    }
+    buffer_ptr_next(&ptr);
+    if (buffer_ptr_char(&ptr) != '\n') {
+        return 0;
+    }
+    return 1;
+}
+
 static void on_read_headkey(struct handle *handle, int first) {
     char key[1024];
     enum buffer_result rv;
@@ -180,6 +190,20 @@ static void on_read_headkey(struct handle *handle, int first) {
 
     arg = (struct http_arg *)handle->arg;
     len = sizeof key;
+    
+    if (first) {
+        handle->readcb = on_read_headkey1;
+    } else {
+        handle->readcb = on_read_headkey2;
+    }
+    if (arg->recvbuf->len < 2) {
+        return;
+    }
+    if (is_empty_line(arg->recvbuf)) {
+        buffer_drain(arg->recvbuf, 2);
+        on_read_payload(handle);
+        return;
+    }
     rv = buffer_read_until(arg->recvbuf, ":", key, &len);
     if (rv == BUFFER_TOOSMALL) {
         LOG(WARN, "request key too long");
@@ -187,11 +211,6 @@ static void on_read_headkey(struct handle *handle, int first) {
         return;
     }
     if (rv == BUFFER_NOTFOUND) {
-        if (first) {
-            handle->readcb = on_read_headkey1;
-        } else {
-            handle->readcb = on_read_headkey2;
-        }
         return;
     }
     if (len == 0) {
@@ -205,11 +224,11 @@ static void on_read_headkey(struct handle *handle, int first) {
     } else {
         ADD_REQ_HEXSTRING(arg->sendbuf, "\r\n");
     }
-    add_req_hexstring(arg->sendbuf, key, len - 1);
-    on_read_headval(handle);
+    add_req_hexstring(arg->sendbuf, key, len);
     if (!strcasecmp(key, "Content-Length:")) {
         arg->content_length = -1;
     }
+    on_read_headval(handle);
     return;
 }
 
