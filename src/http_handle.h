@@ -19,27 +19,15 @@
 
 #include "zlib.h"
 
-enum http_stage {
-    HTTP_COMMAND,
-    HTTP_URL,
-    HTTP_REQUEST,
-    HTTP_HEAD_KEY,
-    HTTP_HEAD_VAL,
-    HTTP_DATA
-};
-
-enum http_type {
+enum http_method {
     HTTP_GET,
-    HTTP_POST,
-    HTTP_CONNECT
+    HTTP_POST
 };
 
 struct http_arg {
     struct buffer *recvbuf;
     struct buffer *sendbuf;
-    z_stream *zstrm;
-    enum http_stage stage;
-    enum http_type type;
+    enum http_method method;
     int content_length;
 };
 

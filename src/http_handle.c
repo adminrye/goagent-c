@@ -37,10 +37,6 @@ void http_arg_deleter(void *_arg) {
     arg = (struct http_arg *)_arg;
     buffer_destroy(arg->recvbuf);
     buffer_destroy(arg->sendbuf);
-    if (arg->zstrm) {
-        deflateEnd(arg->zstrm);
-        free(arg->zstrm);
-    }
     free(arg);
 }
 
@@ -62,21 +58,74 @@ static void add_req_hexstring(struct buffer *buffer,
     }
 }
 
-static void on_read_payload(struct handle *handle) {
+static void send_request(struct handle *handle) {
+}
+
+static void on_read_payload2(struct handle *handle) {
     char payload[4096];
-    enum buffer_result rv;
-    size_t len;
+    int len;
     struct http_arg *arg;
+
+    arg = (struct http_arg *)handle->arg;
+retry:
+    len = recv(handle->fd, payload, sizeof payload, 0);
+    if (len == -1) {
+        if (errno == EINTR) { 
+            goto retry;
+        }
+        LOG(ERR, "recv() failed:%s", strerror(errno));
+        handle_destroy(handle);
+        return;
+    }
+    if (len == 0) {
+        LOG(INFO, "client closed");
+        handle_destroy(handle);
+        return;
+    }
+
+    arg->content_length -= len;
+    if (arg->content_length < 0) {
+        LOG(WARN, "request payload ltoo long");
+        handle_destroy(handle);
+        return;
+    }
+    if (arg->content_length == 0) {
+        send_request(handle);
+    }
+}
+
+static void on_read_payload(struct handle *handle) {
+    size_t node_len;
+    struct http_arg *arg;
+    struct buffer_node *node, *next;
+
+    ADD_REQ_STRING(arg->sendbuf, "&headers=");
 
     arg = (struct http_arg *)handle->arg;
     if (arg->content_length == 0) {
         return;
     }
-    if (arg->recvbuf->len == 0) {
-    }
-}
 
-static void send_request(struct handle *handle) {
+    node = arg->recvbuf->first;
+    while (node) {
+        next = node->next;
+        node_len = node->end - node->begin;
+        add_req_hexstring(arg->sendbuf,
+                          node->buffer + node->begin,
+                          node_len);
+        arg->content_length -= node_len;
+        node = next;
+    }
+
+    if (arg->content_length < 0) {
+        LOG(WARN, "request payload ltoo long");
+        handle_destroy(handle);
+        return;
+    }
+    if (arg->content_length == 0) {
+        send_request(handle);
+    }
+    handle->readcb = on_read_payload2;
 }
 
 static void on_read_headval(struct handle *handle) {
@@ -103,11 +152,7 @@ static void on_read_headval(struct handle *handle) {
         return;
     }
     if (len == 2) {
-        if (arg->type == HTTP_POST) {
-            on_read_payload(handle);
-        } else {
-            send_request(handle);
-        }
+        on_read_payload(handle);
         return;
     }
 
@@ -271,20 +316,19 @@ void on_http_read(struct handle *handle) {
 
     LOG(INFO, "%.*s", len, command);
     if (strncmp(command, "GET ", sizeof "GET " - 1) == 0) {
-        arg->type = HTTP_GET;
+        arg->method = HTTP_GET;
         arg->sendbuf = buffer_create();
         ADD_REQ_STRING(arg->sendbuf, "method=");
         ADD_REQ_HEXSTRING(arg->sendbuf, "GET");
     } else if (strncmp(command, "POST ", sizeof "POST " - 1) == 0) {
-        arg->type = HTTP_POST;
+        arg->method = HTTP_POST;
         arg->sendbuf = buffer_create();
         ADD_REQ_STRING(arg->sendbuf, "method=");
         ADD_REQ_HEXSTRING(arg->sendbuf, "POST");
     } else if (strncmp(command, "CONNECT ", sizeof "CONNECT " - 1) == 0) {
-        arg->type = HTTP_CONNECT;
     }
 
-    if (arg->type == HTTP_GET || arg->type == HTTP_POST) {
+    if (arg->method == HTTP_GET || arg->method == HTTP_POST) {
         on_read_url(handle);
     }
 }
