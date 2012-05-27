@@ -19,8 +19,7 @@
 
 #include "zlib.h"
 
-enum http_stage
-{
+enum http_stage {
     HTTP_COMMAND,
     HTTP_URL,
     HTTP_REQUEST,
@@ -29,12 +28,19 @@ enum http_stage
     HTTP_DATA
 };
 
-struct http_arg
-{
+enum http_type {
+    HTTP_GET,
+    HTTP_POST,
+    HTTP_CONNECT
+};
+
+struct http_arg {
     struct buffer *recvbuf;
     struct buffer *sendbuf;
     z_stream *zstrm;
     enum http_stage stage;
+    enum http_type type;
+    int content_length;
 };
 
 void http_arg_deleter(void *arg);

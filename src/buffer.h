@@ -54,7 +54,7 @@ enum buffer_result buffer_read_until(struct buffer *buffer,
                                      size_t *outlen); 
 int buffer_drain(struct buffer *buffer, size_t len);
 void buffer_prepare_space(struct buffer *buffer);
-void buffer_append_string(struct buffer *buffer, const char *str, size_t len);
+void buffer_append(struct buffer *buffer, const char *str, size_t len);
 
 #endif
 

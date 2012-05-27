@@ -80,7 +80,7 @@ retry:
     return rv;
 }
 
-void buffer_append_string(struct buffer *buffer, const char *str, size_t _len) {
+void buffer_append(struct buffer *buffer, const char *str, size_t _len) {
     const char *src;
     size_t len, node_len, cpy_len;
 

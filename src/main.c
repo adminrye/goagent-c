@@ -23,7 +23,6 @@
 #include "listen_handle.h"
 #include "logger.h"
 #include "buffer.h"
-#include "zlib_wrap.h"
 
 static void
 run() {
