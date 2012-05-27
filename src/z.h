@@ -1,5 +1,5 @@
 /*
- * zlib_wrap.h
+ * z.h
  *
  * Copyright xubin
  *
